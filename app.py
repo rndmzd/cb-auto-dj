@@ -5,6 +5,7 @@ import queue
 import threading
 import time
 from logging.handlers import RotatingFileHandler
+import sys
 
 import requests
 from requests.exceptions import RequestException
@@ -63,6 +64,7 @@ auto_dj = AutoDJ(
 )
 if not auto_dj.check_active_devices():
     logger.error("No active Spotify sessions available. Please start Spotify on a device then restart program.")
+    sys.exit(1)
 song_extractor = SongExtractor(openai_api_key)
 
 event_queue = queue.Queue()
