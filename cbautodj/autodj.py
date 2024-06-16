@@ -12,7 +12,7 @@ class AutoDJ:
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri=redirect_uri,
-            scope="user-modify-playback-state"
+            scope="user-modify-playback-state user-read-playback-state"
         )
 
         # Get access token
