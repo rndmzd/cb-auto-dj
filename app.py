@@ -1,5 +1,6 @@
 import configparser
 import logging
+import os
 import queue
 import threading
 import time
@@ -18,6 +19,9 @@ config.read("config.ini")
 log_file = config.get("Logging", "log_file")
 log_max_size_mb = config.getint("Logging", "log_max_size_mb")
 log_backup_count = config.getint("Logging", "log_backup_count")
+
+if not os.path.exists(os.path.dirname(log_file)):
+    os.makedirs(os.path.dirname(log_file))
 
 # Load configuration and setup logging (same as before)
 logger = logging.getLogger(__name__)
