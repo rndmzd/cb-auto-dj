@@ -13,6 +13,8 @@ from requests.exceptions import RequestException
 from cbautodj.autodj import AutoDJ
 from cbautodj.songextractor import SongExtractor
 
+from pymongo import MongoClient
+
 # Load configuration
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -67,6 +69,11 @@ if not auto_dj.check_active_devices():
     sys.exit(1)
 song_extractor = SongExtractor(openai_api_key)
 
+event_collection = MongoClient(
+    host=config.get('MongoDB', 'host'),
+    port=config.getint('MongoDB', 'port')
+)[config.get('MongoDB', 'db')][config.get('MongoDB', 'collection')]
+
 event_queue = queue.Queue()
 stop_event = threading.Event()
 
@@ -116,6 +123,14 @@ def process_event(event):
         print("CHAT MESSAGE")
 
 
+def archive_event(event):
+    try:
+        result = event_collection.insert_one(event)
+        logger.debug(f"result.inserted_id: {result.inserted_id}")
+    except Exception as e:
+        logger.exception(e)
+
+
 def event_processor(stop_event):
     """
     Continuously process events from the event queue.
@@ -124,6 +139,7 @@ def event_processor(stop_event):
         try:
             event = event_queue.get(timeout=1)  # Timeout to check for stop signal
             process_event(event)
+            archive_event(event)
             event_queue.task_done()
         except queue.Empty:
             continue  # Resume loop if no event and check for stop signal
