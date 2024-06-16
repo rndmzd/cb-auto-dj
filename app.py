@@ -33,7 +33,6 @@ file_handler = RotatingFileHandler(
     log_file, maxBytes=log_max_size_mb * 1024 * 1024, backupCount=log_backup_count  # type: ignore
 )
 
-# Create formatters and add them to handlers
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 stream_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
@@ -46,7 +45,7 @@ events_api_url = config.get("Events API", "url")
 requests_per_minute = config.getint("Events API", "max_requests_per_minute")
 
 # Set your OpenAI API key
-openai_api_key = config.get('Open AI', 'api_key')
+openai_api_key = config.get('OpenAI', 'api_key')
 
 # Spotify credentials
 spotify_client_id = config.get('Spotify', 'client_id')
