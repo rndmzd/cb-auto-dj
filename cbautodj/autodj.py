@@ -1,7 +1,7 @@
 import logging
 from spotipy import Spotify, SpotifyOAuth
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 

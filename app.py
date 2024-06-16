@@ -25,7 +25,7 @@ if not os.path.exists(os.path.dirname(log_file)):
     os.makedirs(os.path.dirname(log_file))
 
 # Load configuration and setup logging (same as before)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 # Create handlers
