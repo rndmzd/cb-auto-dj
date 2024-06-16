@@ -2,6 +2,7 @@ import logging
 import openai
 
 logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 class SongExtractor:

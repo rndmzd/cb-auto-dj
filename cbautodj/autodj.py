@@ -2,6 +2,7 @@ import logging
 from spotipy import Spotify, SpotifyOAuth
 
 logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 class AutoDJ:
