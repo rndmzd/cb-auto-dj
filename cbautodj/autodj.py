@@ -22,12 +22,10 @@ class AutoDJ:
     
     def check_active_devices(self):
         devices = self.spotify.devices()
-        active_device = None
         for device in devices['devices']:
             logger.debug(f"device: {device}")
             if device['is_active']:
                 logger.debug("Active!")
-                active_device = device
                 return True
         return False
 
