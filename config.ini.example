@@ -1,0 +1,19 @@
+[Logging]
+log_file=logs/debug.log
+log_max_size_mb=1
+log_backup_count=5
+
+[Events API]
+url=
+max_requests_per_minute=
+
+[OpenAI]
+api_key=
+
+[Spotify]
+client_id=
+client_secret=
+redirect_url=
+
+[General]
+tip_multiple=
