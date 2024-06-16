@@ -61,6 +61,8 @@ auto_dj = AutoDJ(
     client_secret=spotify_client_secret,
     redirect_uri=spotify_redirect_uri
 )
+if not auto_dj.check_active_devices():
+    logger.error("No active Spotify sessions available. Please start Spotify on a device then restart program.")
 song_extractor = SongExtractor(openai_api_key)
 
 event_queue = queue.Queue()

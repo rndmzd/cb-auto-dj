@@ -19,6 +19,17 @@ class AutoDJ:
         token_info = sp_oauth.get_access_token()
         access_token = token_info['access_token']
         self.spotify = Spotify(auth=access_token)
+    
+    def check_active_devices(self):
+        devices = self.spotify.devices()
+        active_device = None
+        for device in devices['devices']:
+            logger.debug(f"device: {device}")
+            if device['is_active']:
+                logger.debug("Active!")
+                active_device = device
+                return True
+        return False
 
     def add_song_to_playlist(self, song_info):
         """Add the song title to the Spotify playback queue."""
