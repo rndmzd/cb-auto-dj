@@ -16,6 +16,8 @@ config = configparser.ConfigParser()
 config.read("config.ini")
 
 log_file = config.get("Logging", "log_file")
+log_max_size_mb = config.getint("Logging", "log_max_size_mb")
+log_backup_count = config.getint("Logging", "log_backup_count")
 
 # Load configuration and setup logging (same as before)
 logger = logging.getLogger(__name__)
@@ -37,8 +39,6 @@ logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
 
 events_api_url = config.get("Events API", "url")
-log_max_size_mb = config.getint("Logging", "log_max_size_mb")
-log_backup_count = config.getint("Logging", "log_backup_count")
 requests_per_minute = config.getint("Events API", "max_requests_per_minute")
 
 # Set your OpenAI API key
