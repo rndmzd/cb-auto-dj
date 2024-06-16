@@ -15,18 +15,16 @@ from cbautodj.songextractor import SongExtractor
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-LOG_FILE = config.get("Logging", "log_file")
+log_file = config.get("Logging", "log_file")
 
 # Load configuration and setup logging (same as before)
-# Setup logging
-# logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Create handlers
 stream_handler = logging.StreamHandler()
 file_handler = RotatingFileHandler(
-    LOG_FILE, maxBytes=LOG_MAX_SIZE_MB * 1024 * 1024, backupCount=LOG_BACKUP_COUNT  # type: ignore
+    log_file, maxBytes=log_max_size_mb * 1024 * 1024, backupCount=log_backup_count  # type: ignore
 )
 
 # Create formatters and add them to handlers
@@ -38,16 +36,12 @@ file_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
 
-API_URL = config.get("Events API", "url")
-LOG_MAX_SIZE_MB = config.getint("Logging", "log_max_size_mb")
-LOG_BACKUP_COUNT = config.getint("Logging", "log_backup_count")
-REQUESTS_PER_MINUTE = config.getint("Events API", "max_requests_per_minute")
-#OBS_WS_HOST = config.get("OBS", "ws_host")
-#OBS_WS_PORT = config.getint("OBS", "ws_port")
-#OBS_WS_PASSWORD = config.get("OBS", "ws_password")
+events_api_url = config.get("Events API", "url")
+log_max_size_mb = config.getint("Logging", "log_max_size_mb")
+log_backup_count = config.getint("Logging", "log_backup_count")
+requests_per_minute = config.getint("Events API", "max_requests_per_minute")
 
 # Set your OpenAI API key
-#openai.api_key = config.get('OpenAI', 'api_key')
 openai_api_key = config.get('Open AI', 'api_key')
 
 # Spotify credentials
@@ -59,7 +53,6 @@ spotify_redirect_uri = config.get('Spotify', 'redirect_url')
 tip_multiple = config.getint('General', 'tip_multiple')
 
 # Initialize Clients and Controllers
-#obs_controller = OBSController(OBS_WS_HOST, OBS_WS_PORT, OBS_WS_PASSWORD)
 auto_dj = AutoDJ(
     client_id=spotify_client_id,
     client_secret=spotify_client_secret,
@@ -152,7 +145,7 @@ def long_polling(url, interval, stop_event):
 
 
 if __name__ == "__main__":
-    interval = 60 / (REQUESTS_PER_MINUTE / 10)  # type: ignore
+    interval = 60 / (requests_per_minute / 10)  # type: ignore
 
     # Start the event processor thread
     processor_thread = threading.Thread(
@@ -161,7 +154,7 @@ if __name__ == "__main__":
     processor_thread.start()
 
     try:
-        long_polling(API_URL, interval, stop_event)
+        long_polling(events_api_url, interval, stop_event)
     except KeyboardInterrupt:
         print("Keyboard interrupt detected. Cleaning up...")
         #obs_controller.cleanup()
