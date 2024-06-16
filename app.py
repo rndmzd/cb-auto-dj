@@ -67,14 +67,15 @@ auto_dj = AutoDJ(
     redirect_uri=spotify_redirect_uri
 )
 if not auto_dj.check_active_devices():
-    logger.error("No active Spotify sessions available. Please start Spotify on a device then restart program.")
-    sys.exit(1)
+    logger.error("No active Spotify sessions available. Requests will be saved to internal queue until session available.")
 song_extractor = SongExtractor(openai_api_key)
 
-event_collection = MongoClient(
+cb_db = MongoClient(
     host=config.get('MongoDB', 'host'),
     port=config.getint('MongoDB', 'port')
-)[config.get('MongoDB', 'db')][config.get('MongoDB', 'collection')]
+)[config.get('MongoDB', 'db')]
+event_collection = cb_db[config.get('MongoDB', 'collection')]
+queue_collection = cb_db[config.get('MongoDB', 'queue')]
 
 event_queue = queue.Queue()
 stop_event = threading.Event()
@@ -105,15 +106,27 @@ def process_event(event):
             song_count = tip_amount / tip_multiple
             logger.debug("song_count: {song_count}")
 
-            # NEED TO MODIFY TO HANDLE MULTIPLE SONG EVENT
+            # NEED TO CONFIRM HANDLING OF MULTIPLE SONG EVENTS
             title_results = song_extractor.find_titles(message=tip_message, song_count=song_count)
             logger.debug(f'title_results: {title_results}')
 
             if title_results:
+                # Check for songs waiting in queue
+                queued_songs = queue_collection.find({})
+                for song in queued_songs:
+                    queued_song = queued_songs.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
+                    title_results.append(queued_song)
                 for result in title_results:
                     logger.info(f"Artist: {result['artist']}")
                     logger.info(f"Song: {result['song']}")
-                    auto_dj.add_song_to_playlist(result)
+                    search_result = auto_dj.find_song(result)
+                    tracks = search_result['tracks']['items']
+                    if tracks:
+                        track_uri = tracks[0]['uri']
+                        logger.debug(f"track_uri: {track_uri}")
+                        if not auto_dj.add_song_to_queue(track_uri):
+                            queue_result = queue_collection.insert__one(result)
+                            logger.debug(f"queue_result.inserted_id: {queue_result.inserted_id}")
 
     elif event_method == "mediaPurchase":
         print("MEDIA PURCHASE")

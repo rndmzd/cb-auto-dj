@@ -30,15 +30,16 @@ class AutoDJ:
                 return True
         return False
 
-    def add_song_to_playlist(self, song_info):
+    def find_song(self, song_info):
         """Add the song title to the Spotify playback queue."""
         results = self.spotify.search(q=f"{song_info['artist']} - {song_info['song']}", type='track', limit=1)
         logger.debug(f'results: {results}')
-
-        tracks = results['tracks']['items']
-        if tracks:
-            track_uri = tracks[0]['uri']
-            logger.debug(f"track_uri: {track_uri}")
+        return results
+    
+    def add_song_to_queue(self, track_uri):
+        try:
             self.spotify.add_to_queue(track_uri)
-        
-        return tracks
+            return True
+        except Exception as e:
+            logger.exception(e)
+            return False
