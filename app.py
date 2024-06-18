@@ -93,62 +93,66 @@ def process_event(event):
     """
     Process the event from the queue.
     """
-    # Implement event processing logic here
-    logger.debug(f"process_event: {event}")
+    try:
+        # Implement event processing logic here
+        logger.debug(f"process_event: {event}")
 
-    print(json.dumps(event, sort_keys=True, indent=4))
+        print(json.dumps(event, sort_keys=True, indent=4))
+        
+        event_method = event["method"]
+        logger.debug(f"event_method: {event_method}")
+        event_object = event["object"]
+        logger.debug(f"event_object: {event_object}")
+
+        if event_method == "tip":
+            print("TIP")
+
+            tip_amount = event_object["tip"]["tokens"]
+            logger.debug(f"tip_amount: {tip_amount}")
+
+            if tip_amount and tip_amount % tip_multiple == 0:
+                tip_message = event_object["tip"]["message"]
+                logger.debug(f"tip_message: {tip_message}")
+
+                song_count = tip_amount / tip_multiple
+                logger.debug("song_count: {song_count}")
+
+                # NEED TO CONFIRM HANDLING OF MULTIPLE SONG EVENTS
+                title_results = song_extractor.find_titles(message=tip_message, song_count=song_count)
+                logger.debug(f'title_results: {title_results}')
+
+                if title_results:
+                    if use_mongodb:
+                        # Check for songs waiting in queue
+                        queued_songs = queue_collection.find({})
+                        for song in queued_songs:
+                            queued_song = queued_songs.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
+                            title_results.append(queued_song)
+                    for result in title_results:
+                        logger.info(f"Artist: {result['artist']}")
+                        logger.info(f"Song: {result['song']}")
+                        search_result = auto_dj.find_song(result)
+                        tracks = search_result['tracks']['items']
+                        if tracks:
+                            track_uri = tracks[0]['uri']
+                            logger.debug(f"track_uri: {track_uri}")
+                            song_queue_result = auto_dj.add_song_to_queue(track_uri)
+                            logger.debug(f"song_queue_result: {song_queue_result}")
+                            if not song_queue_result and use_mongodb:
+                                queue_result = queue_collection.insert_one(result)
+                                logger.debug(f"queue_result.inserted_id: {queue_result.inserted_id}")
+
+        elif event_method == "mediaPurchase":
+            print("MEDIA PURCHASE")
+
+        elif event_method == "follow":
+            print("FOLLOW")
+
+        elif event_method == "chatMessage":
+            print("CHAT MESSAGE")
     
-    event_method = event["method"]
-    logger.debug(f"event_method: {event_method}")
-    event_object = event["object"]
-    logger.debug(f"event_object: {event_object}")
-
-    if event_method == "tip":
-        print("TIP")
-
-        tip_amount = event_object["tip"]["tokens"]
-        logger.debug(f"tip_amount: {tip_amount}")
-
-        if tip_amount and tip_amount % tip_multiple == 0:
-            tip_message = event_object["tip"]["message"]
-            logger.debug(f"tip_message: {tip_message}")
-
-            song_count = tip_amount / tip_multiple
-            logger.debug("song_count: {song_count}")
-
-            # NEED TO CONFIRM HANDLING OF MULTIPLE SONG EVENTS
-            title_results = song_extractor.find_titles(message=tip_message, song_count=song_count)
-            logger.debug(f'title_results: {title_results}')
-
-            if title_results:
-                if use_mongodb:
-                    # Check for songs waiting in queue
-                    queued_songs = queue_collection.find({})
-                    for song in queued_songs:
-                        queued_song = queued_songs.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
-                        title_results.append(queued_song)
-                for result in title_results:
-                    logger.info(f"Artist: {result['artist']}")
-                    logger.info(f"Song: {result['song']}")
-                    search_result = auto_dj.find_song(result)
-                    tracks = search_result['tracks']['items']
-                    if tracks:
-                        track_uri = tracks[0]['uri']
-                        logger.debug(f"track_uri: {track_uri}")
-                        song_queue_result = auto_dj.add_song_to_queue(track_uri)
-                        logger.debug(f"song_queue_result: {song_queue_result}")
-                        if not song_queue_result and use_mongodb:
-                            queue_result = queue_collection.insert_one(result)
-                            logger.debug(f"queue_result.inserted_id: {queue_result.inserted_id}")
-
-    elif event_method == "mediaPurchase":
-        print("MEDIA PURCHASE")
-
-    elif event_method == "follow":
-        print("FOLLOW")
-
-    elif event_method == "chatMessage":
-        print("CHAT MESSAGE")
+    except Exception as e:
+        logger.exception(f"Error processing event: {event}", exc_info=e)
 
 
 def archive_event(event):
@@ -156,7 +160,7 @@ def archive_event(event):
         result = event_collection.insert_one(event)
         logger.debug(f"result.inserted_id: {result.inserted_id}")
     except Exception as e:
-        logger.exception(e)
+        logger.exception(f"Error archiving event: {event}", exc_info=e)
 
 
 def event_processor(stop_event):
@@ -172,6 +176,8 @@ def event_processor(stop_event):
             event_queue.task_done()
         except queue.Empty:
             continue  # Resume loop if no event and check for stop signal
+        except Exception as e:
+            logger.exception("Error in event processor", exc_info=e)
 
 
 def long_polling(url, interval, stop_event):
