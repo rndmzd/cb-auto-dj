@@ -67,10 +67,40 @@ class AutoDJ:
         except SpotifyException as e:
             logger.exception("Failed to find song", exc_info=e)
             return None
+    
+    def get_device_info(self, device_id):
+        try:
+            for device in self.spotify.devices():
+                if device['id'] == device_id:
+                    return device
+            else:
+                logger.warning("Could not find device with provided id.")
+                return None
+        except Exception as e:
+            logger.exception("Failed to retrieve device information.", exc_info=e)
 
     def add_song_to_queue(self, track_uri):
         try:
-            self.spotify.add_to_queue(track_uri)
+            if self.get_device_info(device_id=self.playback_device)['is_active'] is False:
+                logger.info("Playback device inactive. Transferring playback to device.")
+                self.spotify.transfer_playback(device_id=self.playback_device)
+
+            logger.info("Adding song to active playback queue.")
+            self.spotify.add_to_queue(track_uri, device_id=self.playback_device)
+            
+            playback_state = self.spotify.current_playback()
+            logger.debug(f"playback_state: {playback_state}")
+
+            if playback_state["is_playing"] is False:
+                self.spotify.start_playback(device_id=self.playback_device)
+
+            """if len(self.spotify.queue()) == 0:
+                logger.info("No song in active playback. Starting playback with requested song.")
+                self.spotify.start_playback(device_id=self.playback_device, uris=[track_uri])
+            else:
+                logger.info("Adding song to active playback queue.")
+                self.spotify.add_to_queue(track_uri, device_id=self.playback_device)"""
+            
             return True
         except SpotifyException as e:
             logger.exception("Failed to add song to queue", exc_info=e)
