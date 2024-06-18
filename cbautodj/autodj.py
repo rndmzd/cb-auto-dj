@@ -74,7 +74,8 @@ class AutoDJ:
     
     def get_device_info(self, device_id):
         try:
-            for device in self.spotify.devices():
+            devices = self.spotify.devices()
+            for device in devices['devices']:
                 if device['id'] == device_id:
                     return device
             else:
