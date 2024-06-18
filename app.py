@@ -197,7 +197,7 @@ def long_polling(url, interval, stop_event):
 
 
 if __name__ == "__main__":
-    interval = 60 / (requests_per_minute / 10)  # type: ignore
+    interval = 60 / (requests_per_minute / 10)
 
     # Start the event processor thread
     processor_thread = threading.Thread(
@@ -209,7 +209,6 @@ if __name__ == "__main__":
         long_polling(events_api_url, interval, stop_event)
     except KeyboardInterrupt:
         print("Keyboard interrupt detected. Cleaning up...")
-        #obs_controller.cleanup()
         stop_event.set()
         processor_thread.join()
         print("Done.")
