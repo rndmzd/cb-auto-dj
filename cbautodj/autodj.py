@@ -9,21 +9,19 @@ logger.setLevel(logging.DEBUG)
 class AutoDJ:
     def __init__(self, client_id, client_secret, redirect_uri):
         # Initialize Spotify OAuth
-        """sp_oauth = SpotifyOAuth(
+        sp_oauth = SpotifyOAuth(
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri=redirect_uri,
-            scope="user-modify-playback-state user-read-playback-state"
+            scope="user-modify-playback-state user-read-playback-state",
+            open_browser=False
         )
 
         # Get access token
         try:
-            token_info = sp_oauth.get_access_token()
-            access_token = token_info['access_token']
-            self.spotify = Spotify(auth=access_token)"""
-        try:
-            auth_manager = SpotifyClientCredentials()
-            self.spotify = Spotify(auth_manager=auth_manager)
+            #token_info = sp_oauth.get_access_token()
+            #access_token = token_info['access_token']
+            self.spotify = Spotify(auth_manager=sp_oauth)
         except SpotifyException as e:
             logger.exception("Spotify authentication failed", exc_info=e)
             raise
