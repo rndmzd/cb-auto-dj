@@ -27,19 +27,21 @@ class AutoDJ:
         # Get and set playback device
         try:
             spotify_devices = self.spotify.devices()
-            print("==[ Available Spotify Devices ]==\n")
-            for idx, device in enumerate(spotify_devices):
+            logger.debug(f"spotify_devices: {spotify_devices}")
+
+            print("\n==[ Available Spotify Devices ]==\n")
+            for idx, device in enumerate(spotify_devices['devices']):
                 print(f"{idx+1} - {device['name']}\n")
 
             while True:
                 user_selection = int(input("Choose playback device: "))
                 logger.debug(f"user_selection: {user_selection}")
 
-                if user_selection not in range(0, len(spotify_devices)-1):
+                if user_selection not in range(0, len(spotify_devices['devices'])):
                     logger.error("Invalid device number. Try again.")
                     continue
 
-                self.playback_device = spotify_devices[user_selection-1]["id"]
+                self.playback_device = spotify_devices['devices'][user_selection-1]["id"]
                 break
         except Exception as e:
             logger.exception("Spotify playback device selection failed", exc_info=e)
