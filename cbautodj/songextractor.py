@@ -15,28 +15,33 @@ class SongExtractor:
                 messages=[
                     {
                         "role": "user",
-                        "content": f"""Extract exactly {song_count} song title{"s" if song_count > 1 else ""} from the following message. Provide the response as a | separated list without any other unrelated text. The format should resemble "Artist--Song Title|Artist--Song Title|...":
+                        "content": f"""Extract exactly {song_count} song title{"s" if song_count > 1 else ""} from the following message. Provide the response as a | separated list without any other unrelated text. The format should resemble "Artist--Song Title|Artist--Song Title|...". Each entry should be exactly in the format 'Artist--Song Title' with '|' separating multiple entries:
 
                         {message}"""
                     }
                 ],
-                model="gpt-4"
+                model="gpt-4o"
             )
 
-            song_titles_response = response.choices[0].message.content.split('|')
+            song_titles_response = response.choices[0].message.content.strip().split('|')
             song_titles = []
             for idx, resp in enumerate(song_titles_response):
-                song_titles.append(
-                    {
-                        "artist": resp.split('--')[0],
-                        "song": resp.split('--')[1]
-                    }
-                )
+                if '--' in resp:
+                    artist, song = resp.split('--', 1)
+                    song_titles.append(
+                        {
+                            "artist": artist.strip(),
+                            "song": song.strip()
+                        }
+                    )
+                else:
+                    logger.warning(f"Unexpected format in response: {resp}")
 
             logger.debug(f'song_titles: {song_titles}')
             logger.debug(f"len(song_titles): {len(song_titles)}")
 
             return song_titles
+        
         except openai.APIError as e:
             logger.exception("Failed to extract song titles", exc_info=e)
             return []
