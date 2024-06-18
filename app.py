@@ -65,6 +65,7 @@ spotify_redirect_uri = config.get('Spotify', 'redirect_url')
 
 # General Settings
 tip_multiple = config.getint('General', 'tip_multiple')
+use_mongodb = config.getboolean('General', 'use_mongodb')
 
 # Initialize Clients and Controllers
 auto_dj = AutoDJ(
@@ -76,12 +77,13 @@ if not auto_dj.check_active_devices():
     logger.error("No active Spotify sessions available. Requests will be saved to internal queue until session available.")
 song_extractor = SongExtractor(openai_api_key)
 
-cb_db = MongoClient(
-    host=config.get('MongoDB', 'host'),
-    port=config.getint('MongoDB', 'port')
-)[config.get('MongoDB', 'db')]
-event_collection = cb_db[config.get('MongoDB', 'collection')]
-queue_collection = cb_db[config.get('MongoDB', 'queue')]
+if use_mongodb:
+    cb_db = MongoClient(
+        host=config.get('MongoDB', 'host'),
+        port=config.getint('MongoDB', 'port')
+    )[config.get('MongoDB', 'db')]
+    event_collection = cb_db[config.get('MongoDB', 'collection')]
+    queue_collection = cb_db[config.get('MongoDB', 'queue')]
 
 event_queue = queue.Queue()
 stop_event = threading.Event()
@@ -119,11 +121,12 @@ def process_event(event):
             logger.debug(f'title_results: {title_results}')
 
             if title_results:
-                # Check for songs waiting in queue
-                queued_songs = queue_collection.find({})
-                for song in queued_songs:
-                    queued_song = queued_songs.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
-                    title_results.append(queued_song)
+                if use_mongodb:
+                    # Check for songs waiting in queue
+                    queued_songs = queue_collection.find({})
+                    for song in queued_songs:
+                        queued_song = queued_songs.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
+                        title_results.append(queued_song)
                 for result in title_results:
                     logger.info(f"Artist: {result['artist']}")
                     logger.info(f"Song: {result['song']}")
@@ -132,8 +135,10 @@ def process_event(event):
                     if tracks:
                         track_uri = tracks[0]['uri']
                         logger.debug(f"track_uri: {track_uri}")
-                        if not auto_dj.add_song_to_queue(track_uri):
-                            queue_result = queue_collection.insert__one(result)
+                        song_queue_result = auto_dj.add_song_to_queue(track_uri)
+                        logger.debug(f"song_queue_result: {song_queue_result}")
+                        if not song_queue_result and use_mongodb:
+                            queue_result = queue_collection.insert_one(result)
                             logger.debug(f"queue_result.inserted_id: {queue_result.inserted_id}")
 
     elif event_method == "mediaPurchase":
@@ -162,7 +167,8 @@ def event_processor(stop_event):
         try:
             event = event_queue.get(timeout=1)  # Timeout to check for stop signal
             process_event(event)
-            archive_event(event)
+            if use_mongodb:
+                archive_event(event)
             event_queue.task_done()
         except queue.Empty:
             continue  # Resume loop if no event and check for stop signal
