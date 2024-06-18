@@ -126,7 +126,7 @@ def process_event(event):
                         # Check for songs waiting in queue
                         queued_songs = queue_collection.find({})
                         for song in queued_songs:
-                            queued_song = queued_songs.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
+                            queued_song = queue_collection.find_one_and_delete({'_id': song['_id']}, projection={'_id': False})
                             title_results.append(queued_song)
                     for result in title_results:
                         logger.info(f"Artist: {result['artist']}")
