@@ -36,8 +36,8 @@ logger.setLevel(logging.DEBUG)
 # Create handlers
 stream_handler = logging.StreamHandler()
 file_handler = RotatingFileHandler(
-    log_file, 
-    maxBytes=log_max_size_mb * 1024 * 1024, 
+    log_file,
+    maxBytes=log_max_size_mb * 1024 * 1024,
     backupCount=log_backup_count,
     encoding='utf-8'
 )
@@ -46,7 +46,7 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 stream_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
-stream_handler.setLevel(logging.INFO)
+stream_handler.setLevel(logging.DEBUG)
 
 # Add handlers to the logger
 logger.addHandler(stream_handler)
@@ -98,7 +98,7 @@ def process_event(event):
         logger.debug(f"process_event: {event}")
 
         print(json.dumps(event, sort_keys=True, indent=4))
-        
+
         event_method = event["method"]
         logger.debug(f"event_method: {event_method}")
         event_object = event["object"]
@@ -150,7 +150,7 @@ def process_event(event):
 
         elif event_method == "chatMessage":
             print("CHAT MESSAGE")
-    
+
     except Exception as e:
         logger.exception(f"Error processing event: {event}", exc_info=e)
 

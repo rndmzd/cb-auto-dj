@@ -4,6 +4,7 @@ import openai
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class SongExtractor:
     def __init__(self, api_key):
         self.openai_client = openai.OpenAI(api_key=api_key)
@@ -41,7 +42,7 @@ class SongExtractor:
             logger.debug(f"len(song_titles): {len(song_titles)}")
 
             return song_titles
-        
+
         except openai.APIError as e:
             logger.exception("Failed to extract song titles", exc_info=e)
             return []
