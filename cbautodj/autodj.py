@@ -4,6 +4,7 @@ from spotipy import Spotify, SpotifyOAuth, SpotifyException
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class AutoDJ:
     def __init__(self, client_id, client_secret, redirect_uri):
         # Initialize Spotify OAuth
@@ -21,6 +22,27 @@ class AutoDJ:
             self.spotify = Spotify(auth=access_token)
         except SpotifyException as e:
             logger.exception("Spotify authentication failed", exc_info=e)
+            raise
+
+        # Get and set playback device
+        try:
+            spotify_devices = self.spotify.devices()
+            print("==[ Available Spotify Devices ]==\n")
+            for idx, device in enumerate(spotify_devices):
+                print(f"{idx+1} - {device['name']}\n")
+
+            while True:
+                user_selection = int(input("Choose playback device: "))
+                logger.debug(f"user_selection: {user_selection}")
+
+                if user_selection not in range(0, len(spotify_devices)-1):
+                    logger.error("Invalid device number. Try again.")
+                    continue
+
+                self.playback_device = spotify_devices[user_selection-1]["id"]
+                break
+        except Exception as e:
+            logger.exception("Spotify playback device selection failed", exc_info=e)
             raise
 
     def check_active_devices(self):
