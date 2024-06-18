@@ -90,23 +90,27 @@ class AutoDJ:
                 logger.info("Playback device inactive. Transferring playback to device.")
                 self.spotify.transfer_playback(device_id=self.playback_device)
 
-            logger.info("Adding song to active playback queue.")
-            self.spotify.add_to_queue(track_uri, device_id=self.playback_device)
-            
+            queue_length = len(self.spotify.queue())
+            logger.debug(f"queue_length: {queue_length}")
+
             playback_state = self.spotify.current_playback()
             logger.debug(f"playback_state: {playback_state}")
 
-            if playback_state["is_playing"] is False:
-                self.spotify.start_playback(device_id=self.playback_device)
+            is_playing = playback_state["is_playing"]
+            logger.debug(f"is_playing: {is_playing}")
 
-            """if len(self.spotify.queue()) == 0:
-                logger.info("No song in active playback. Starting playback with requested song.")
-                self.spotify.start_playback(device_id=self.playback_device, uris=[track_uri])
-            else:
-                logger.info("Adding song to active playback queue.")
-                self.spotify.add_to_queue(track_uri, device_id=self.playback_device)"""
+            logger.info("Adding song to active playback queue.")
+            self.spotify.add_to_queue(track_uri, device_id=self.playback_device)
+
+            if is_playing is True:
+                return True
             
-            return True
+            logger.info("Skipping to next track.")
+            self.spotify.next_track(device_id=self.playback_device)
+
+            logger.info("Starting playback.")
+            self.spotify.start_playback(device_id=self.playback_device)
+            
         except SpotifyException as e:
             logger.exception("Failed to add song to queue", exc_info=e)
             return False
