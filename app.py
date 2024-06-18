@@ -5,6 +5,7 @@ import queue
 import threading
 import time
 from logging.handlers import RotatingFileHandler
+import simplejson as json
 import sys
 
 import requests
@@ -14,6 +15,8 @@ from cbautodj.autodj import AutoDJ
 from cbautodj.songextractor import SongExtractor
 
 from pymongo import MongoClient
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 # Load configuration
 config = configparser.ConfigParser()
@@ -33,7 +36,10 @@ logger.setLevel(logging.DEBUG)
 # Create handlers
 stream_handler = logging.StreamHandler()
 file_handler = RotatingFileHandler(
-    log_file, maxBytes=log_max_size_mb * 1024 * 1024, backupCount=log_backup_count  # type: ignore
+    log_file, 
+    maxBytes=log_max_size_mb * 1024 * 1024, 
+    backupCount=log_backup_count,
+    encoding='utf-8'
 )
 
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -88,6 +94,8 @@ def process_event(event):
     # Implement event processing logic here
     logger.debug(f"process_event: {event}")
 
+    print(json.dumps(event, sort_keys=True, indent=4))
+    
     event_method = event["method"]
     logger.debug(f"event_method: {event_method}")
     event_object = event["object"]
