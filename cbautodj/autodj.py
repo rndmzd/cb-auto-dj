@@ -1,6 +1,5 @@
 import logging
 from spotipy import Spotify, SpotifyOAuth, SpotifyException
-from spotipy.oauth2 import SpotifyClientCredentials
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -13,7 +12,7 @@ class AutoDJ:
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri=redirect_uri,
-            scope="user-modify-playback-state user-read-playback-state",
+            scope="user-modify-playback-state user-read-playback-state user-read-currently-playing",
             open_browser=False
         )
 
