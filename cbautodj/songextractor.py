@@ -36,11 +36,22 @@ class SongExtractor:
                     song_titles.append(
                         {
                             "artist": artist.strip(),
-                            "song": song.strip()
+                            "song": song.strip(),
+                            "gpt": True
                         }
                     )
                 else:
                     logger.warning(f"Unexpected format in response: {resp}")
+                    #if len(song_titles_response) == 1 and song_count == 1:
+                    if song_count == 1:
+                        logger.warning("Returning original request to attempt Spotify query.")
+                        song_titles.append(
+                            {
+                                "artist": "",
+                                "song": message,
+                                "gpt": False
+                            }
+                        )
 
             logger.debug(f'song_titles: {song_titles}')
             logger.debug(f"len(song_titles): {len(song_titles)}")
