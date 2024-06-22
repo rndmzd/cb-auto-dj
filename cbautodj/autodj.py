@@ -1,4 +1,6 @@
 import logging
+import sys
+
 from spotipy import Spotify, SpotifyOAuth, SpotifyException
 
 logger = logging.getLogger(__name__)
@@ -33,17 +35,21 @@ class AutoDJ:
             print("\n==[ Available Spotify Devices ]==\n")
             for idx, device in enumerate(spotify_devices['devices']):
                 print(f"{idx+1} - {device['name']}\n")
+            
+            try:
+                while True:
+                    user_selection = int(input("Choose playback device: "))
+                    logger.debug(f"user_selection: {user_selection}")
 
-            while True:
-                user_selection = int(input("Choose playback device: "))
-                logger.debug(f"user_selection: {user_selection}")
+                    if user_selection not in range(0, len(spotify_devices['devices'])):
+                        logger.error("Invalid device number. Try again.")
+                        continue
 
-                if user_selection not in range(0, len(spotify_devices['devices'])):
-                    logger.error("Invalid device number. Try again.")
-                    continue
-
-                self.playback_device = spotify_devices['devices'][user_selection-1]["id"]
-                break
+                    self.playback_device = spotify_devices['devices'][user_selection-1]["id"]
+                    break
+            except KeyboardInterrupt:
+                logger.info('User aborted selection. Exiting.')
+                sys.exit()
         except Exception as e:
             logger.exception("Spotify playback device selection failed", exc_info=e)
             raise
@@ -95,11 +101,8 @@ class AutoDJ:
             playback_state = self.spotify.current_playback()
             logger.debug(f"playback_state: {playback_state}")
 
-            if playback_state:
-                is_playing = playback_state["is_playing"]
-                logger.debug(f"is_playing: {is_playing}")
-            else:
-                is_playing = False
+            is_playing = playback_state["is_playing"]
+            logger.debug(f"is_playing: {is_playing}")
 
             logger.info("Adding song to active playback queue.")
             self.spotify.add_to_queue(track_uri, device_id=self.playback_device)
