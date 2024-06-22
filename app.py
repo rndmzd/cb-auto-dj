@@ -74,7 +74,7 @@ auto_dj = AutoDJ(
     redirect_uri=spotify_redirect_uri
 )
 if not auto_dj.check_active_devices():
-    logger.warning("No active Spotify sessions available. Requests will be saved to internal queue until session available.")
+    logger.warning("Spotify session inactive. Requests will be saved to internal queue if still unavailable when live request received.")
 song_extractor = SongExtractor(openai_api_key)
 
 if use_mongodb:
