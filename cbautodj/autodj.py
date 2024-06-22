@@ -95,8 +95,11 @@ class AutoDJ:
             playback_state = self.spotify.current_playback()
             logger.debug(f"playback_state: {playback_state}")
 
-            is_playing = playback_state["is_playing"]
-            logger.debug(f"is_playing: {is_playing}")
+            if playback_state:
+                is_playing = playback_state["is_playing"]
+                logger.debug(f"is_playing: {is_playing}")
+            else:
+                is_playing = False
 
             logger.info("Adding song to active playback queue.")
             self.spotify.add_to_queue(track_uri, device_id=self.playback_device)
